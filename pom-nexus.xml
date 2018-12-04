@@ -3,7 +3,7 @@
 	
 	<groupId>com.aventstack</groupId>
 	<artifactId>extentreports-cucumber3-adapter</artifactId>
-	<version>1.0.1-SNAPSHOT</version>
+	<version>1.0.1</version>
 	<name>extentreports-cucumber3-adapter</name>
     <url>http://extentreports.com</url>
     <description>Cucumber-JVM 3 adapter for Extent Framework</description>
