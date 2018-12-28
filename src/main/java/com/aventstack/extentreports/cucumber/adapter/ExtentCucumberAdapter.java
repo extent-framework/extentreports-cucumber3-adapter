@@ -16,12 +16,14 @@ import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.GherkinKeyword;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.gherkin.model.Given;
 import com.aventstack.extentreports.markuputils.MarkupHelper;
 import com.aventstack.extentreports.service.ExtentService;
 
 import cucumber.api.PickleStepTestStep;
 import cucumber.api.Result;
 import cucumber.api.TestCase;
+import cucumber.api.TestStep;
 import cucumber.api.event.EmbedEvent;
 import cucumber.api.event.EventHandler;
 import cucumber.api.event.EventPublisher;
@@ -155,7 +157,13 @@ public class ExtentCucumberAdapter
         }
     }
 
+    @SuppressWarnings("deprecation")
     private synchronized void handleTestStepStarted(TestStepStarted event) {
+        if (event.testStep.isHook()) {
+            ExtentTest t = scenarioThreadLocal.get()
+                    .createNode(Given.class, event.testStep.getCodeLocation());
+            stepTestThreadLocal.set(t);
+        }
         if (event.testStep instanceof PickleStepTestStep) {
             PickleStepTestStep testStep = (PickleStepTestStep) event.testStep;
             createTestStep(testStep);
@@ -163,7 +171,34 @@ public class ExtentCucumberAdapter
     }
 
     private synchronized void handleTestStepFinished(TestStepFinished event) {
-        updateResult(event.result);
+        updateResult(event.testStep, event.result);
+    }
+
+    private synchronized void updateResult(TestStep step, Result result) {        
+        switch (result.getStatus().lowerCaseName()) {
+            case "failed":
+                stepTestThreadLocal.get().fail(result.getError());
+                break;
+            case "skipped":
+            case "pending":
+                Boolean currentEndingEventSkipped = stepTestThreadLocal.get().getModel().getLogContext() != null 
+                    && !stepTestThreadLocal.get().getModel().getLogContext().isEmpty()
+                        ? stepTestThreadLocal.get().getModel().getLogContext().getLast().getStatus() == Status.SKIP
+                        : false;
+                if (result.getError() != null) {
+                    stepTestThreadLocal.get().skip(result.getError());
+                } else if (!currentEndingEventSkipped) {
+                    String details = result.getErrorMessage() == null ? "Step skipped" : result.getErrorMessage();
+                    stepTestThreadLocal.get().skip(details);
+                }
+                break;
+            case "passed":
+                if (stepTestThreadLocal.get()!= null && stepTestThreadLocal.get().getModel().getLogContext().isEmpty())
+                    stepTestThreadLocal.get().pass("");
+                break;
+            default:
+                break;
+        }
     }
 
     private synchronized void handleEmbed(EmbedEvent event) {
@@ -214,7 +249,12 @@ public class ExtentCucumberAdapter
         }
     }
 
-    private void handleWrite(WriteEvent event) { }
+    private void handleWrite(WriteEvent event) { 
+        String text = event.text;
+        if (text != null && !text.isEmpty()) {
+            stepTestThreadLocal.get().info(text);
+        }
+    }
 
     private void finishReport() {
         ExtentService.getInstance().flush();
@@ -391,33 +431,6 @@ public class ExtentCucumberAdapter
         Map<String, Object> docStringMap = new HashMap<String, Object>();
         docStringMap.put("value", docString.getContent());
         return docStringMap;
-    }
-
-    private synchronized void updateResult(Result result) {
-        switch (result.getStatus().lowerCaseName()) {
-            case "failed":
-                stepTestThreadLocal.get().fail(result.getError());
-                break;
-            case "skipped":
-            case "pending":
-                Boolean currentEndingEventSkipped = stepTestThreadLocal.get().getModel().getLogContext() != null 
-                    && !stepTestThreadLocal.get().getModel().getLogContext().isEmpty()
-                        ? stepTestThreadLocal.get().getModel().getLogContext().getLast().getStatus() == Status.SKIP
-                        : false;
-                if (result.getError() != null) {
-                    stepTestThreadLocal.get().skip(result.getError());
-                } else if (!currentEndingEventSkipped) {
-                    String details = result.getErrorMessage() == null ? "Step skipped" : result.getErrorMessage();
-                    stepTestThreadLocal.get().skip(details);
-                }
-                break;
-            case "passed":
-                if (stepTestThreadLocal.get()!= null && stepTestThreadLocal.get().getModel().getLogContext().isEmpty())
-                    stepTestThreadLocal.get().pass("");
-                break;
-            default:
-                break;
-        }
     }
 
 }
