@@ -16,6 +16,7 @@ import com.aventstack.extentreports.ExtentTest;
 import com.aventstack.extentreports.GherkinKeyword;
 import com.aventstack.extentreports.MediaEntityBuilder;
 import com.aventstack.extentreports.Status;
+import com.aventstack.extentreports.gherkin.model.Asterisk;
 import com.aventstack.extentreports.gherkin.model.Given;
 import com.aventstack.extentreports.markuputils.MarkupHelper;
 import com.aventstack.extentreports.service.ExtentService;
@@ -161,7 +162,7 @@ public class ExtentCucumberAdapter
     private synchronized void handleTestStepStarted(TestStepStarted event) {
         if (event.testStep.isHook()) {
             ExtentTest t = scenarioThreadLocal.get()
-                    .createNode(Given.class, event.testStep.getCodeLocation());
+                    .createNode(Asterisk.class, event.testStep.getCodeLocation());
             stepTestThreadLocal.set(t);
         }
         if (event.testStep instanceof PickleStepTestStep) {
