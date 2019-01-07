@@ -1,4 +1,6 @@
-## extentreports-cucumber3-adapter
+[![Maven Central](https://img.shields.io/maven-central/v/com.aventstack/extentreports-cucumber3-adapter.svg?maxAge=300)](http://search.maven.org/#search|ga|1|g:"com.aventstack")
+
+## Extent Framework Cucumber3 Adapter
 
 ### Docs
 
@@ -11,7 +13,7 @@ See `src/test` for examples.
 To begin using the adapter, add the com.aventstack.extentreports.cucumber.adapter.ExtentCucumberAdapter plugin to the runner.
 
 ```java
-`@RunWith(Cucumber.class)
+@RunWith(Cucumber.class)
 @CucumberOptions(plugin = {"com.aventstack.extentreports.cucumber.adapter.ExtentCucumberAdapter:"})
 public class RunCukesTest {
 	// ..
@@ -20,4 +22,4 @@ public class RunCukesTest {
 
 ### License
 
-extentreports-cucumber3-adapter is MIT licensed.
+MIT license
